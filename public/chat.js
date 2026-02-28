@@ -104,12 +104,15 @@ async function sendMessage() {
 			chatMessages.scrollTop = chatMessages.scrollHeight;
 		};
 
-		let sawDone = false;
+		// Read streaming SSE response until the reader signals EOF.
+		// The special "[DONE]" marker is handled in the event-processing logic
+		// and does not require a separate loop state flag.
 		while (true) {
 			const { done, value } = await reader.read();
 
 			if (done) {
-				// Process any remaining complete events in buffer
+				// Process any remaining complete events in buffer. If a "[DONE]"
+				// marker is present, we stop processing further events.
 				const parsed = consumeSseEvents(buffer + "\n\n");
 				for (const data of parsed.events) {
 					if (data === "[DONE]") {
