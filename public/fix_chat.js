@@ -88,7 +88,9 @@ async function sendMessage() {
 
 		// Handle errors
 		if (!response.ok) {
-			throw new Error(`Failed to get response: ${response.status} ${response.statusText}`);
+			throw new Error(
+				`API request to /api/chat failed with status ${response.status}: ${response.statusText}. Please try again or check your connection.`,
+			);
 		}
 		if (!response.body) {
 			throw new Error("Response body is null");
