@@ -20,6 +20,19 @@ let chatHistory = [
 ];
 let isProcessing = false;
 
+/**
+ * Creates and appends an assistant message element to the chat.
+ * Returns the inner <p> element so the caller can update its contents.
+ */
+function createAssistantMessageElement() {
+	const assistantMessageEl = document.createElement("div");
+	assistantMessageEl.className = "message assistant-message";
+	const assistantTextEl = document.createElement("p");
+	assistantMessageEl.appendChild(assistantTextEl);
+	chatMessages.appendChild(assistantMessageEl);
+	return assistantTextEl;
+}
+
 // Auto-resize textarea as user types
 userInput.addEventListener("input", function () {
 	this.style.height = "auto";
@@ -66,11 +79,7 @@ async function sendMessage() {
 
 	try {
 		// Create new assistant response element
-		const assistantMessageEl = document.createElement("div");
-		assistantMessageEl.className = "message assistant-message";
-		assistantMessageEl.innerHTML = "<p></p>";
-		chatMessages.appendChild(assistantMessageEl);
-		const assistantTextEl = assistantMessageEl.querySelector("p");
+		const assistantTextEl = createAssistantMessageElement();
 
 		// Scroll to bottom
 		chatMessages.scrollTop = chatMessages.scrollHeight;
@@ -88,7 +97,9 @@ async function sendMessage() {
 
 		// Handle errors
 		if (!response.ok) {
-			throw new Error(`Failed to get response: ${response.status} ${response.statusText}`);
+			throw new Error(
+				`API request to /api/chat failed with status ${response.status}: ${response.statusText}. Please try again or check your connection.`,
+			);
 		}
 		if (!response.body) {
 			throw new Error("Response body is null");
@@ -110,7 +121,9 @@ async function sendMessage() {
 			const { done, value } = await reader.read();
 
 			if (done) {
-				// Process any remaining complete events in buffer
+				// Process any remaining events by synthetically appending the SSE record terminator.
+				// SSE events are separated by a blank line; if the stream ends without one,
+				// adding "\n\n" ensures the final event is flushed and parsed correctly.
 				const parsed = consumeSseEvents(buffer + "\n\n");
 				for (const data of parsed.events) {
 					if (data === "[DONE]") break;
@@ -145,9 +158,10 @@ async function sendMessage() {
 
 	} catch (error) {
 		console.error("Error:", error);
+		const errorMessage = error && error.message ? error.message : String(error);
 		addMessageToChat(
 			"assistant",
-			"Sorry, there was an error processing your request.",
+			`Sorry, there was an error processing your request: ${errorMessage}`,
 		);
 	} finally {
 		// Hide typing indicator
