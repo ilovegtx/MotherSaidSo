@@ -110,7 +110,9 @@ async function sendMessage() {
 			const { done, value } = await reader.read();
 
 			if (done) {
-				// Process any remaining complete events in buffer
+				// Process any remaining events by synthetically appending the SSE record terminator.
+				// SSE events are separated by a blank line; if the stream ends without one,
+				// adding "\n\n" ensures the final event is flushed and parsed correctly.
 				const parsed = consumeSseEvents(buffer + "\n\n");
 				for (const data of parsed.events) {
 					if (data === "[DONE]") break;
