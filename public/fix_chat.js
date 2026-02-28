@@ -145,9 +145,10 @@ async function sendMessage() {
 
 	} catch (error) {
 		console.error("Error:", error);
+		const errorMessage = error && error.message ? error.message : String(error);
 		addMessageToChat(
 			"assistant",
-			"Sorry, there was an error processing your request.",
+			`Sorry, there was an error processing your request: ${errorMessage}`,
 		);
 	} finally {
 		// Hide typing indicator
