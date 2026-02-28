@@ -107,6 +107,7 @@ async function sendMessage() {
 		// Read streaming SSE response until the reader signals EOF.
 		// The special "[DONE]" marker is handled in the event-processing logic
 		// and does not require a separate loop state flag.
+		let sawDone = false;
 		// The special "[DONE]" marker is handled in the event-processing logic
 		// and does not require a separate loop state flag.
 		while (true) {
